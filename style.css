@@ -1,0 +1,9 @@
+body {
+  margin: 0;
+  overflow: hidden;
+}
+
+canvas {
+  background: #cceeff; /* Light blue background */
+  display: block;
+}
