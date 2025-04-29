@@ -14,6 +14,9 @@ const baseImagesFlying = [
 baseImagesFlying[0].src = 'base2.png';
 baseImagesFlying[1].src = 'base3.png';
 
+const baseFallingImage = new Image();
+baseFallingImage.src = 'base4.png'; // ตอนตกจะใช้รูปนี้
+
 // Flying animation control
 let flyingFrame = 0;
 let flyingTimer = 0;
@@ -35,6 +38,8 @@ let base = {
 
 const gravity = 1.2;
 const damping = 0.985;
+
+let vy = 0; // global velocity y
 
 function getPointerPos(e) {
   const rect = canvas.getBoundingClientRect();
@@ -83,7 +88,7 @@ function handleEnd() {
 
 function updateBase() {
   let vx = (base.x - base.oldx) * damping;
-  let vy = (base.y - base.oldy) * damping;
+  vy = (base.y - base.oldy) * damping; // assign global vy
 
   base.oldx = base.x;
   base.oldy = base.y;
@@ -94,6 +99,7 @@ function updateBase() {
   if (base.y + base.height / 2 > groundY) {
     base.y = groundY - base.height / 2;
     base.oldy = base.y + vy * -0.2;
+    vy = 0;
   }
   // Stay inside the screen horizontally
   if (base.x - base.width / 2 < 0) {
@@ -113,15 +119,21 @@ function draw() {
   ctx.fillStyle = '#5c4033';
   ctx.fillRect(0, groundY, canvas.width, groundHeight);
 
-  // Draw base
   if (base.y + base.height / 2 < groundY) {
-    flyingTimer++;
-    if (flyingTimer > flyingSpeed) {
-      flyingTimer = 0;
-      flyingFrame = (flyingFrame + 1) % baseImagesFlying.length;
+    if (vy > 5) {
+      // ถ้าตกเร็วมาก (vy > 5) ใช้ base4
+      ctx.drawImage(baseFallingImage, base.x - base.width / 2, base.y - base.height / 2, base.width, base.height);
+    } else {
+      // ลอยกลางอากาศแบบปกติ วน base2, base3
+      flyingTimer++;
+      if (flyingTimer > flyingSpeed) {
+        flyingTimer = 0;
+        flyingFrame = (flyingFrame + 1) % baseImagesFlying.length;
+      }
+      ctx.drawImage(baseImagesFlying[flyingFrame], base.x - base.width / 2, base.y - base.height / 2, base.width, base.height);
     }
-    ctx.drawImage(baseImagesFlying[flyingFrame], base.x - base.width / 2, base.y - base.height / 2, base.width, base.height);
   } else {
+    // ติดพื้น
     flyingFrame = 0;
     flyingTimer = 0;
     ctx.drawImage(baseImage, base.x - base.width / 2, base.y - base.height / 2, base.width, base.height);
@@ -143,7 +155,6 @@ window.addEventListener('resize', () => {
   canvas.height = window.innerHeight;
   groundY = canvas.height - groundHeight;
 
-  // Reposition base if needed
   if (base.y + base.height / 2 > groundY) {
     base.y = groundY - base.height / 2;
     base.oldy = base.y;
